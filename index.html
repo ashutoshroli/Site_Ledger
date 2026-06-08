@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Ledger - User Portal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1245b8;
+            --primary-light: #e8f0fe;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f0f4ff;
+            --bg2: #e4ecff;
+            --surface: #ffffff;
+            --surface2: #f8faff;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #94a3b8;
+            --border: #dde4f5;
+            --shadow-sm: 0 1px 4px rgba(26,86,219,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 16px rgba(26,86,219,0.08), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 40px rgba(26,86,219,0.12), 0 4px 12px rgba(0,0,0,0.07);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --header-h: 60px;
+            --nav-h: 68px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1,h2,h3,h4,h5,h6,.fw-bold,.fw-semibold { font-family: 'Syne', sans-serif; }
+
+        /* ── LOADER ─────────────────────────────────────────────── */
+        #loader {
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.97);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .loader-ring {
+            width: 48px; height: 48px;
+            border: 4px solid var(--primary-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader-text { font-size: 0.95rem; color: var(--text2); font-weight: 500; }
+
+        /* ── LOGIN ──────────────────────────────────────────────── */
+        #login-view {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #0f172a 0%, #1a3a8f 50%, #1a56db 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        #login-view::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 80% 60% at 60% 30%, rgba(26,86,219,0.35) 0%, transparent 70%),
+                        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(245,158,11,0.15) 0%, transparent 60%);
+        }
+        #login-view::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 60px),
+                              repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 60px);
+        }
+        .login-card {
+            position: relative; z-index: 1;
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1);
+            padding: 2.5rem 2rem;
+            width: 90%;
+            max-width: 390px;
+            animation: loginSlide 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        @keyframes loginSlide { from { opacity:0; transform: translateY(30px) scale(0.96); } }
+
+        .login-logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+            box-shadow: 0 8px 20px rgba(26,86,219,0.35);
+        }
+        .login-logo i { font-size: 1.6rem; color: white; }
+
+        .form-control {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.85rem;
+            color: var(--text);
+            background: var(--surface2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,0.12); background: white; outline: none; }
+        .input-group-text { background: var(--surface2); border: 1.5px solid var(--border); border-right: none; border-radius: var(--radius-sm) 0 0 var(--radius-sm); color: var(--text3); }
+        .input-group .form-control { border-left: none; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.7rem;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700; font-size: 0.95rem;
+            letter-spacing: 0.03em;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(26,86,219,0.35);
+        }
+        .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,86,219,0.45); }
+        .btn-login:active { transform: translateY(0); }
+
+        /* ── MAIN APP ───────────────────────────────────────────── */
+        #main-app { display: none; padding-bottom: var(--nav-h); }
+
+        /* Header */
+        .app-header {
+            position: sticky; top: 0; z-index: 100;
+            height: var(--header-h);
+            background: linear-gradient(90deg, #0f172a, var(--primary-dark));
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 2px 12px rgba(15,23,42,0.25);
+        }
+        .header-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; color: white; letter-spacing: 0.02em; }
+        .header-title span { color: var(--accent); }
+        .btn-icon { background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+        .btn-icon:hover { background: rgba(255,255,255,0.2); }
+
+        /* Tabs / Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: white;
+            display: flex; align-items: center; justify-content: space-around;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(26,86,219,0.08);
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        .nav-tab {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 3px; padding: 6px 0; cursor: pointer;
+            color: var(--text3); font-size: 0.7rem; font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            letter-spacing: 0.01em;
+            transition: all 0.25s;
+            border: none; background: none;
+        }
+        .nav-tab i { font-size: 1.2rem; transition: transform 0.25s; }
+        .nav-tab.active { color: var(--primary); }
+        .nav-tab.active i { transform: translateY(-2px); }
+
+        /* View sections */
+        .container { padding: 16px; max-width: 600px; }
+        .view-section { display: none; animation: fadeUp 0.3s ease both; }
+        .view-section.active { display: block; }
+        @keyframes fadeUp { from { opacity:0; transform: translateY(8px); } }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .card-body { padding: 14px; }
+
+        /* Stat Cards */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 4px;
+        }
+        .stat-card.credit::before { background: var(--success); }
+        .stat-card.debit::before { background: var(--danger); }
+        .stat-card.crdues::before { background: var(--warning); }
+        .stat-card.drdues::before { background: var(--primary); }
+        .stat-label { font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 6px; }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text); }
+        .stat-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1.6rem; opacity: 0.07; }
+
+        /* Section titles */
+        .section-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: var(--primary); }
+
+        /* Tables */
+        .table-wrap { border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; background: white; box-shadow: var(--shadow-sm); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--surface2); border-bottom: 1px solid var(--border); }
+        th { padding: 10px 12px; font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); white-space: nowrap; }
+        td { padding: 12px; font-size: 0.83rem; color: var(--text); white-space: nowrap; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        tbody tr { cursor: pointer; transition: background 0.15s; }
+        tbody tr:hover { background: var(--primary-light); }
+        tfoot th { padding: 10px 12px; background: var(--surface2); border-top: 1px solid var(--border); font-size: 0.82rem; }
+
+        .empty-row td { text-align: center; padding: 32px; color: var(--text3); font-size: 0.85rem; }
+
+        /* Badges */
+        .badge-type {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .badge-type.cr { background: #d1fae5; color: #065f46; }
+        .badge-type.dr { background: #fee2e2; color: #991b1b; }
+
+        /* Filter bar */
+        .filter-bar { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-bar label { font-size: 0.72rem; font-weight: 700; color: var(--text2); font-family: 'Syne', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+        .filter-half { flex: 1; min-width: 120px; }
+        .btn-filter { background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 8px 16px; font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .btn-filter:hover { background: var(--primary-dark); }
+        .btn-clear { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 16px; font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+
+        /* ── SIDEBAR ────────────────────────────────────────────── */
+        .offcanvas {
+            width: 300px !important;
+            border-radius: 0 20px 20px 0 !important;
+            border: none !important;
+            box-shadow: 6px 0 30px rgba(15,23,42,0.18) !important;
+            background: white;
+        }
+        .sidebar-header {
+            background: linear-gradient(135deg, #0f172a, var(--primary-dark));
+            padding: 24px 20px 20px;
+        }
+        .sidebar-avatar {
+            width: 60px; height: 60px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem; font-weight: 800;
+            color: white;
+            margin-bottom: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .sidebar-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: white; }
+        .sidebar-role { font-size: 0.78rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+        .sidebar-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+        .sidebar-close:hover { background: rgba(255,255,255,0.2); }
+
+        .sidebar-body { padding: 16px; overflow-y: auto; }
+
+        .info-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .info-icon { width: 30px; height: 30px; background: var(--primary-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 0.8rem; flex-shrink: 0; margin-top: 1px; }
+        .info-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); font-family: 'Syne', sans-serif; }
+        .info-value { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+
+        /* Sidebar dues summary */
+        .dues-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .dues-scard {
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            text-align: center;
+        }
+        .dues-scard.cr { background: #d1fae5; }
+        .dues-scard.dr { background: #fee2e2; }
+        .dues-scard-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
+        .dues-scard.cr .dues-scard-label { color: #065f46; }
+        .dues-scard.dr .dues-scard-label { color: #991b1b; }
+        .dues-scard-val { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 800; }
+        .dues-scard.cr .dues-scard-val { color: #065f46; }
+        .dues-scard.dr .dues-scard-val { color: #991b1b; }
+
+        .btn-logout {
+            width: 100%; background: white; border: 1.5px solid var(--danger); color: var(--danger);
+            border-radius: var(--radius-sm); padding: 10px;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: var(--danger); color: white; }
+
+        /* ── MODALS ─────────────────────────────────────────────── */
+        .modal-content {
+            border: none !important;
+            border-radius: 20px !important;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border) !important;
+            padding: 14px 16px !important;
+        }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--text); }
+        .modal-body { padding: 16px !important; }
+
+        /* Invoice items table in modal */
+        .invoice-table { width: 100%; border-collapse: collapse; }
+        .invoice-table th { background: var(--surface2); padding: 8px 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text2); border-bottom: 1px solid var(--border); font-family: 'Syne', sans-serif; }
+        .invoice-table td { padding: 10px; font-size: 0.82rem; border-bottom: 1px solid var(--border); color: var(--text); }
+        .invoice-table tr:last-child td { border-bottom: none; }
+        .invoice-table tfoot th { background: var(--surface2); border-top: 2px solid var(--border); }
+
+        .summary-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin: 12px 0; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 0.84rem; }
+        .summary-row.total { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+
+        .section-chip { font-family: 'Syne', sans-serif; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); margin: 14px 0 8px; display: flex; align-items: center; gap: 6px; }
+        .section-chip::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Item details page */
+        .item-search { 
+            background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+            width: 100%; outline: none; transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+        .item-search:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+        .item-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        .item-card:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: var(--shadow); }
+        .item-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .item-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem; }
+        .item-meta { font-size: 0.77rem; color: var(--text3); margin-top: 2px; }
+        .item-total-badge { background: var(--primary-light); color: var(--primary); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; }
+
+        /* Dashboard page */
+        .page-greeting { margin-bottom: 18px; }
+        .page-greeting .name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text); }
+        .page-greeting .sub { font-size: 0.82rem; color: var(--text3); margin-top: 2px; }
+
+        /* Amounts coloring */
+        .amt-cr { color: var(--success); font-weight: 700; }
+        .amt-dr { color: var(--danger); font-weight: 700; }
+        .text-end { text-align: right; }
+        .text-center { text-align: center; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader-ring"></div>
+        <div id="loader-text">Authenticating...</div>
+    </div>
+
+    <!-- ══ LOGIN VIEW ══════════════════════════════════════════════ -->
+    <div id="login-view">
+        <div class="login-card">
+            <div class="login-logo"><i class="fas fa-book-open"></i></div>
+            <div style="text-align:center; margin-bottom:24px;">
+                <h4 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;">Site Ledger</h4>
+                <p style="font-size:0.82rem;color:var(--text3);margin-top:4px;">Secure User Access Portal</p>
+            </div>
+            <div class="mb-3 text-start">
+                <label class="form-label" style="font-size:0.78rem;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2);">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-envelope" style="font-size:0.8rem;"></i></span>
+                    <input type="email" id="login-email" class="form-control" placeholder="your@email.com" required>
+                </div>
+            </div>
+            <div class="mb-4 text-start">
+                <label class="form-label" style="font-size:0.78rem;font-weight:700;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:0.05em;color:var(--text2);">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock" style="font-size:0.8rem;"></i></span>
+                    <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+                </div>
+            </div>
+            <button class="btn-login w-100" onclick="handleLoginSubmit()">
+                <i class="fas fa-sign-in-alt me-2"></i>Secure Login
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ MAIN APP ════════════════════════════════════════════════ -->
+    <div id="main-app">
+
+        <!-- Header -->
+        <header class="app-header">
+            <button class="btn-icon" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-title">My <span>Ledger</span></div>
+            <div style="width:36px;"></div>
+        </header>
+
+        <!-- Views -->
+        <div class="container">
+
+            <!-- ─── DASHBOARD ─── -->
+            <div id="dashboard" class="view-section active">
+                <div class="page-greeting">
+                    <div class="name" id="dash-username">Welcome</div>
+                    <div class="sub">Here's your financial overview</div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-card credit">
+                        <div class="stat-label">Credit Value</div>
+                        <div class="stat-value" id="dash-tot-credit">₹0</div>
+                        <i class="fas fa-arrow-up stat-icon"></i>
+                    </div>
+                    <div class="stat-card debit">
+                        <div class="stat-label">Debit Value</div>
+                        <div class="stat-value" id="dash-tot-debit">₹0</div>
+                        <i class="fas fa-arrow-down stat-icon"></i>
+                    </div>
+                    <div class="stat-card crdues">
+                        <div class="stat-label">Cr. Balance Due</div>
+                        <div class="stat-value" id="dash-dues-credit">₹0</div>
+                        <i class="fas fa-clock stat-icon"></i>
+                    </div>
+                    <div class="stat-card drdues">
+                        <div class="stat-label">Dr. Balance Due</div>
+                        <div class="stat-value" id="dash-dues-debit">₹0</div>
+                        <i class="fas fa-file-invoice stat-icon"></i>
+                    </div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-receipt"></i> Recent Transactions</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Date</th><th>Type</th><th class="text-end">Amount</th><th class="text-end">Dues Bal</th>
+                        </tr></thead>
+                        <tbody id="dash-recent-tbody">
+                            <tr class="empty-row"><td colspan="4">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ─── TRANSACTIONS ─── -->
+            <div id="transactions" class="view-section">
+                <div class="section-title" style="margin-bottom:14px;"><i class="fas fa-exchange-alt"></i> My Transactions</div>
+                <div class="filter-bar">
+                    <div class="filter-row">
+                        <div class="filter-half">
+                            <label>From</label>
+                            <input type="date" id="tran-from" class="form-control" style="font-size:0.82rem;padding:7px 10px;">
+                        </div>
+                        <div class="filter-half">
+                            <label>To</label>
+                            <input type="date" id="tran-to" class="form-control" style="font-size:0.82rem;padding:7px 10px;">
+                        </div>
+                    </div>
+                    <div class="filter-row" style="margin-top:8px;">
+                        <button class="btn-filter" onclick="renderTransactions()"><i class="fas fa-filter me-1"></i>Filter</button>
+                        <button class="btn-clear" onclick="clearTranFilters()"><i class="fas fa-times me-1"></i>Clear</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Date</th><th>Type</th><th class="text-end">Amount</th><th class="text-end">Dues Bal</th>
+                        </tr></thead>
+                        <tbody id="tran-tbody">
+                            <tr class="empty-row"><td colspan="4">No transactions</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ─── DUES ─── -->
+            <div id="dues" class="view-section">
+                <div class="section-title" style="margin-bottom:14px;"><i class="fas fa-file-invoice-dollar"></i> My Dues Ledger</div>
+                <div class="filter-bar">
+                    <div class="filter-row">
+                        <div class="filter-half">
+                            <label>From</label>
+                            <input type="date" id="dues-from" class="form-control" style="font-size:0.82rem;padding:7px 10px;">
+                        </div>
+                        <div class="filter-half">
+                            <label>To</label>
+                            <input type="date" id="dues-to" class="form-control" style="font-size:0.82rem;padding:7px 10px;">
+                        </div>
+                    </div>
+                    <div class="filter-row" style="margin-top:8px;">
+                        <button class="btn-filter" onclick="renderDues()"><i class="fas fa-filter me-1"></i>Filter</button>
+                        <button class="btn-clear" onclick="clearDuesFilters()"><i class="fas fa-times me-1"></i>Clear</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Txn Date</th><th>Type</th><th class="text-end">Total Due</th><th class="text-end">Paid</th><th class="text-end">Balance</th>
+                        </tr></thead>
+                        <tbody id="dues-tbody">
+                            <tr class="empty-row"><td colspan="5">No dues records</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ─── ITEM DETAILS ─── -->
+            <div id="items" class="view-section">
+                <div class="section-title" style="margin-bottom:14px;"><i class="fas fa-boxes"></i> My Item Details</div>
+                <input type="text" class="item-search" id="item-search-input" placeholder="&#x1F50D;  Search item name, TID..." oninput="renderItems()">
+                <div id="items-list">
+                    <div style="text-align:center;padding:32px;color:var(--text3);font-size:0.85rem;">No items found</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="userSidebar">
+            <div class="sidebar-header">
+                <button class="sidebar-close" data-bs-dismiss="offcanvas" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="sidebar-avatar" id="side-avatar">U</div>
+                <div class="sidebar-name" id="side-name">User Name</div>
+                <div class="sidebar-role" id="side-role"><i class="fas fa-shield-alt me-1"></i>Role</div>
+            </div>
+            <div class="sidebar-body">
+                <!-- User Details -->
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px;font-family:'Syne',sans-serif;">Profile Details</div>
+                <div class="info-card">
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-phone"></i></div>
+                        <div><div class="info-label">Mobile</div><div class="info-value" id="side-mobile">—</div></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                        <div><div class="info-label">Email</div><div class="info-value" id="side-email">—</div></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div><div class="info-label">Village</div><div class="info-value" id="side-village">—</div></div>
+                    </div>
+                </div>
+
+                <!-- Dues Summary -->
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px;font-family:'Syne',sans-serif;">Dues Summary</div>
+                <div class="dues-summary-grid">
+                    <div class="dues-scard cr">
+                        <div class="dues-scard-label">Credit Dues</div>
+                        <div class="dues-scard-val" id="side-cr-dues">₹0</div>
+                    </div>
+                    <div class="dues-scard dr">
+                        <div class="dues-scard-label">Debit Dues</div>
+                        <div class="dues-scard-val" id="side-dr-dues">₹0</div>
+                    </div>
+                </div>
+
+                <!-- Item Details Link -->
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:8px;font-family:'Syne',sans-serif;">Quick Access</div>
+                <button onclick="goToItems()" style="width:100%;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);border-radius:var(--radius-sm);padding:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;margin-bottom:12px;transition:all 0.2s;text-align:left;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-boxes"></i> View My Item Details
+                    <i class="fas fa-arrow-right" style="margin-left:auto;font-size:0.75rem;"></i>
+                </button>
+
+                <button onclick="logout()" class="btn-logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-tab active" id="nav-dashboard" onclick="switchTab('dashboard', this)">
+                <i class="fas fa-home"></i>Home
+            </button>
+            <button class="nav-tab" id="nav-transactions" onclick="switchTab('transactions', this)">
+                <i class="fas fa-exchange-alt"></i>History
+            </button>
+            <button class="nav-tab" id="nav-dues" onclick="switchTab('dues', this)">
+                <i class="fas fa-file-invoice-dollar"></i>Dues
+            </button>
+            <button class="nav-tab" id="nav-items" onclick="switchTab('items', this)">
+                <i class="fas fa-boxes"></i>Items
+            </button>
+        </nav>
+    </div>
+
+    <!-- ══ MODAL: Transaction Detail ══════════════════════════════ -->
+    <div class="modal fade" id="tranModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title"><i class="fas fa-receipt me-2" style="color:var(--primary);"></i>Invoice Details</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modal-tran-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MODAL: Dues Detail ═════════════════════════════════════ -->
+    <div class="modal fade" id="duesDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title"><i class="fas fa-history me-2" style="color:var(--primary);"></i>Payment History</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modal-dues-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MODAL: Item Details ════════════════════════════════════ -->
+    <div class="modal fade" id="itemModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title"><i class="fas fa-box-open me-2" style="color:var(--primary);"></i>Item Detail</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modal-item-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ══ CONFIG ══════════════════════════════════════════════════
+        const API_URL = "https://script.google.com/macros/s/AKfycbyoKRA3vUax6zFnwsEnaGdR1pwGJv8s72N9Gwf8udj07jCEdeXLDmvTg84pQpY67oChvw/exec";
+
+        // ══ STATE ═══════════════════════════════════════════════════
+        let db = {
+            USERS: [],
+            TRANSACTIONS: [],
+            DUES: [],
+            "ITEM DETAILS": [],
+            "ITEM MASTER": [],
+            "VILLAGE MASTER": []
+        };
+        let loggedInUid = null;
+
+        let bootstrapTranModal, bootstrapDuesDetailModal, bootstrapItemModal;
+
+        // ══ INIT ════════════════════════════════════════════════════
+        window.onload = () => {
+            bootstrapTranModal    = new bootstrap.Modal(document.getElementById('tranModal'));
+            bootstrapDuesDetailModal = new bootstrap.Modal(document.getElementById('duesDetailModal'));
+            bootstrapItemModal    = new bootstrap.Modal(document.getElementById('itemModal'));
+
+            const saved = sessionStorage.getItem('ledgerData');
+            const savedUid = sessionStorage.getItem('ledgerUid');
+            if (saved && savedUid) {
+                db = JSON.parse(saved);
+                loggedInUid = savedUid;
+                showMainApp();
+            }
+        };
+
+        // ══ LOGIN ═══════════════════════════════════════════════════
+        async function handleLoginSubmit() {
+            const email    = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-pass').value;
+            if (!email || !password) { alert("Please enter email and password."); return; }
+
+            showLoader("Authenticating...");
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', email, password }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow'
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    db = result.data;
+                    loggedInUid = result.user_uid;
+                    sessionStorage.setItem('ledgerData', JSON.stringify(db));
+                    sessionStorage.setItem('ledgerUid', loggedInUid);
+                    showMainApp();
+                } else {
+                    alert(result.message || "Login Failed! Check your credentials.");
+                }
+            } catch (err) {
+                alert("Network error. Please check your connection and try again.");
+                console.error(err);
+            } finally {
+                hideLoader();
+            }
+        }
+
+        // ══ SHOW / HIDE ══════════════════════════════════════════════
+        function showLoader(msg) {
+            document.getElementById('loader-text').innerText = msg || 'Loading...';
+            document.getElementById('loader').style.display = 'flex';
+        }
+        function hideLoader() {
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            setupUserProfile();
+            initializeViews();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('ledgerData');
+            sessionStorage.removeItem('ledgerUid');
+            db = { USERS: [], TRANSACTIONS: [], DUES: [], "ITEM DETAILS": [], "ITEM MASTER": [], "VILLAGE MASTER": [] };
+            loggedInUid = null;
+
+            // Close sidebar if open
+            const sidebarEl = document.getElementById('userSidebar');
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebarEl);
+            if (offcanvas) offcanvas.hide();
+
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-pass').value = '';
+        }
+
+        // ══ HELPERS ══════════════════════════════════════════════════
+        function safeNum(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            // Remove currency symbols and commas before parsing
+            const cleaned = String(val).replace(/[₹,\s]/g, '');
+            return parseFloat(cleaned) || 0;
+        }
+
+        function formatCurr(amount) {
+            const n = safeNum(amount);
+            return "₹" + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // FIX: Parse date robustly — handles DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, DD-MM-YYYY
+        function parseDate(str) {
+            if (!str) return null;
+            str = String(str).trim();
+
+            // ISO format: YYYY-MM-DD or YYYY/MM/DD
+            if (/^\d{4}[-\/]\d{2}[-\/]\d{2}/.test(str)) {
+                return new Date(str.replace(/\//g, '-'));
+            }
+            // DD/MM/YYYY or DD-MM-YYYY
+            const dmy = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if (dmy) return new Date(`${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`);
+            // Fallback
+            const d = new Date(str);
+            return isNaN(d) ? null : d;
+        }
+
+        // FIX: Calculate real current dues per transaction from DUES sheet
+        function getActualTxnDues(tid) {
+            const t = db.TRANSACTIONS.find(x => x.TID === tid);
+            if (!t) return 0;
+            let duesPaidLater = 0;
+            db.DUES.filter(d => d.TID === tid).forEach(d => {
+                duesPaidLater += safeNum(d['TOTAL DUES PAID']);
+            });
+            return Math.max(0, safeNum(t.DUES) - duesPaidLater);
+        }
+
+        // FIX: Only use USERS[0] since backend filters by UID already
+        function getLoggedInUserInfo() {
+            const user = db.USERS[0] || {};
+            const village = (db['VILLAGE MASTER'] || []).find(v => v.VID === user.VID) || {};
+            return {
+                name:    user.NAME    || 'User',
+                mobile:  user.MOBILE  || 'N/A',
+                email:   user.EMAIL   || 'N/A',
+                role:    user.ROLE    || 'User',
+                village: village.NAME || 'N/A',
+                initial: (user.NAME || 'U').charAt(0).toUpperCase()
+            };
+        }
+
+        // ══ SETUP PROFILE ════════════════════════════════════════════
+        function setupUserProfile() {
+            const ui = getLoggedInUserInfo();
+
+            // Header & Dashboard
+            document.getElementById('dash-username').innerText = 'Hi, ' + ui.name.split(' ')[0];
+
+            // Sidebar profile
+            document.getElementById('side-avatar').innerText = ui.initial;
+            document.getElementById('side-name').innerText   = ui.name;
+            document.getElementById('side-role').innerHTML   = `<i class="fas fa-shield-alt me-1"></i>${ui.role}`;
+            document.getElementById('side-mobile').innerText = ui.mobile;
+            document.getElementById('side-email').innerText  = ui.email;
+            document.getElementById('side-village').innerText = ui.village;
+
+            // Sidebar dues summary
+            let crDues = 0, drDues = 0;
+            db.TRANSACTIONS.forEach(t => {
+                const due = getActualTxnDues(t.TID);
+                const type = (t.TYPE || '').trim().toLowerCase();
+                if (type === 'credit') crDues += due;
+                else if (type === 'debit') drDues += due;
+            });
+            document.getElementById('side-cr-dues').innerText = formatCurr(crDues);
+            document.getElementById('side-dr-dues').innerText = formatCurr(drDues);
+        }
+
+        // ══ INIT VIEWS ═══════════════════════════════════════════════
+        function initializeViews() {
+            renderDashboard();
+            renderTransactions();
+            renderDues();
+            renderItems();
+        }
+
+        // ══ TAB SWITCH ════════════════════════════════════════════════
+        function switchTab(tabId, btnEl) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToItems() {
+            // Close sidebar
+            const sidebarEl = document.getElementById('userSidebar');
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebarEl);
+            if (offcanvas) offcanvas.hide();
+            // Switch to items tab
+            switchTab('items', document.getElementById('nav-items'));
+        }
+
+        // ══ RENDER DASHBOARD ══════════════════════════════════════════
+        function renderDashboard() {
+            let totCredit = 0, totDebit = 0, crDues = 0, drDues = 0;
+
+            db.TRANSACTIONS.forEach(t => {
+                const finalAmt = safeNum(t.SUBTOTAL) - safeNum(t.DISCOUNT);
+                const actualDue = getActualTxnDues(t.TID);
+                const type = (t.TYPE || '').trim().toLowerCase();
+                if (type === 'credit') { totCredit += finalAmt; crDues += actualDue; }
+                else if (type === 'debit') { totDebit += finalAmt; drDues += actualDue; }
+            });
+
+            document.getElementById('dash-tot-credit').innerText  = formatCurr(totCredit);
+            document.getElementById('dash-tot-debit').innerText   = formatCurr(totDebit);
+            document.getElementById('dash-dues-credit').innerText = formatCurr(crDues);
+            document.getElementById('dash-dues-debit').innerText  = formatCurr(drDues);
+
+            const recentTxns = [...db.TRANSACTIONS].reverse().slice(0, 15);
+            const html = recentTxns.map(t => {
+                const isCr = (t.TYPE || '').trim().toLowerCase() === 'credit';
+                const finalAmt = safeNum(t.SUBTOTAL) - safeNum(t.DISCOUNT);
+                const actDues  = getActualTxnDues(t.TID);
+                return `<tr onclick="openTranModal('${escHtml(t.TID)}')">
+                    <td><div style="font-weight:600;">${t.DATE || '—'}</div></td>
+                    <td><span class="badge-type ${isCr ? 'cr' : 'dr'}">${isCr ? 'CR' : 'DR'}</span></td>
+                    <td class="text-end ${isCr ? 'amt-cr' : 'amt-dr'}">${formatCurr(finalAmt)}</td>
+                    <td class="text-end ${actDues > 0 ? 'amt-dr' : 'amt-cr'}">${formatCurr(actDues)}</td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('dash-recent-tbody').innerHTML =
+                html || '<tr class="empty-row"><td colspan="4">No recent transactions</td></tr>';
+        }
+
+        // ══ RENDER TRANSACTIONS ═══════════════════════════════════════
+        function renderTransactions() {
+            const fromDate = document.getElementById('tran-from').value ? parseDate(document.getElementById('tran-from').value) : null;
+            const toDate   = document.getElementById('tran-to').value   ? parseDate(document.getElementById('tran-to').value)   : null;
+            if (toDate) toDate.setHours(23,59,59,999); // Include full day
+
+            const html = [...db.TRANSACTIONS].reverse().filter(t => {
+                const d = parseDate(t.DATE);
+                if (!d) return true;
+                if (fromDate && d < fromDate) return false;
+                if (toDate   && d > toDate)   return false;
+                return true;
+            }).map(t => {
+                const isCr = (t.TYPE || '').trim().toLowerCase() === 'credit';
+                const finalAmt = safeNum(t.SUBTOTAL) - safeNum(t.DISCOUNT);
+                const actDues  = getActualTxnDues(t.TID);
+                return `<tr onclick="openTranModal('${escHtml(t.TID)}')">
+                    <td style="font-weight:600;">${t.DATE || '—'}</td>
+                    <td><span class="badge-type ${isCr ? 'cr' : 'dr'}">${isCr ? 'CR' : 'DR'}</span></td>
+                    <td class="text-end ${isCr ? 'amt-cr' : 'amt-dr'}">${formatCurr(finalAmt)}</td>
+                    <td class="text-end ${actDues > 0 ? 'amt-dr' : 'amt-cr'}">${formatCurr(actDues)}</td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('tran-tbody').innerHTML =
+                html || '<tr class="empty-row"><td colspan="4">No transactions found</td></tr>';
+        }
+
+        function clearTranFilters() {
+            document.getElementById('tran-from').value = '';
+            document.getElementById('tran-to').value   = '';
+            renderTransactions();
+        }
+
+        // ══ RENDER DUES ═══════════════════════════════════════════════
+        function renderDues() {
+            const fromDate = document.getElementById('dues-from').value ? parseDate(document.getElementById('dues-from').value) : null;
+            const toDate   = document.getElementById('dues-to').value   ? parseDate(document.getElementById('dues-to').value)   : null;
+            if (toDate) toDate.setHours(23,59,59,999);
+
+            // Aggregate dues by TID
+            const agg = {};
+            db.DUES.forEach(d => {
+                const tid = d.TID;
+                if (!agg[tid]) {
+                    const txn = db.TRANSACTIONS.find(t => t.TID === tid) || {};
+                    agg[tid] = {
+                        TID: tid,
+                        txnDate: d['DATE of TRANSACTION'] || txn.DATE || '',
+                        txnType: (txn.TYPE || '').trim().toLowerCase(),
+                        originalDues: safeNum(txn.DUES) || safeNum(d['TOTAL DUES AMOUNT']),
+                        totalPaid: safeNum(d['TOTAL DUES PAID'])
+                    };
+                } else {
+                    agg[tid].totalPaid += safeNum(d['TOTAL DUES PAID']);
+                }
+            });
+
+            const html = Object.values(agg).reverse().filter(d => {
+                const dt = parseDate(d.txnDate);
+                if (!dt) return true;
+                if (fromDate && dt < fromDate) return false;
+                if (toDate   && dt > toDate)   return false;
+                return true;
+            }).map(d => {
+                const isCr = d.txnType === 'credit';
+                const bal  = Math.max(0, d.originalDues - d.totalPaid);
+                return `<tr onclick="openDuesDetailModal('${escHtml(d.TID)}')">
+                    <td style="font-weight:600;">${d.txnDate || '—'}</td>
+                    <td><span class="badge-type ${isCr ? 'cr' : 'dr'}">${isCr ? 'CR' : 'DR'}</span></td>
+                    <td class="text-end" style="color:var(--text2);">${formatCurr(d.originalDues)}</td>
+                    <td class="text-end amt-cr">${formatCurr(d.totalPaid)}</td>
+                    <td class="text-end ${bal > 0 ? 'amt-dr' : 'amt-cr'}">${formatCurr(bal)}</td>
+                </tr>`;
+            }).join('');
+
+            document.getElementById('dues-tbody').innerHTML =
+                html || '<tr class="empty-row"><td colspan="5">No dues records found</td></tr>';
+        }
+
+        function clearDuesFilters() {
+            document.getElementById('dues-from').value = '';
+            document.getElementById('dues-to').value   = '';
+            renderDues();
+        }
+
+        // ══ RENDER ITEMS ══════════════════════════════════════════════
+        function renderItems() {
+            const query = (document.getElementById('item-search-input').value || '').trim().toLowerCase();
+
+            // Get all ITEM DETAILS for this user (already filtered by backend)
+            let items = db['ITEM DETAILS'] || [];
+
+            if (query) {
+                items = items.filter(i => {
+                    const itemName = getItemName(i.IID).toLowerCase();
+                    return itemName.includes(query) || (i.TID || '').toLowerCase().includes(query);
+                });
+            }
+
+            if (items.length === 0) {
+                document.getElementById('items-list').innerHTML =
+                    `<div style="text-align:center;padding:40px;color:var(--text3);">
+                        <i class="fas fa-box-open" style="font-size:2rem;margin-bottom:12px;display:block;"></i>
+                        No items found
+                    </div>`;
+                return;
+            }
+
+            const html = [...items].reverse().map(i => {
+                const itemName = getItemName(i.IID);
+                const itemType = getItemType(i.IID);
+                const txnDate  = (db.TRANSACTIONS.find(t => t.TID === i.TID) || {}).DATE || i.DATE || '';
+                return `<div class="item-card" onclick="openItemModal('${escHtml(i.IDID || i.IID + i.TID)}')">
+                    <div class="item-card-head">
+                        <div>
+                            <div class="item-name">${itemName}</div>
+                            <div class="item-meta">${itemType ? itemType + ' · ' : ''}TID: ${i.TID || '—'} · ${txnDate}</div>
+                        </div>
+                        <span class="item-total-badge">${formatCurr(i['ITEM TOTAL'])}</span>
+                    </div>
+                    <div style="display:flex;gap:16px;font-size:0.78rem;color:var(--text2);">
+                        <span><strong>Rate:</strong> ${formatCurr(i.RATE)}</span>
+                        <span><strong>Qty:</strong> ${i.QUANTITY || '—'}</span>
+                        <span><strong>Date:</strong> ${i.DATE || txnDate || '—'}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('items-list').innerHTML = html;
+        }
+
+        function getItemName(iid) {
+            return ((db['ITEM MASTER'] || []).find(m => m.IID === iid) || {})['ITEM NAME'] || 'Unknown Item';
+        }
+        function getItemType(iid) {
+            return ((db['ITEM MASTER'] || []).find(m => m.IID === iid) || {})['ITEM TYPE'] || '';
+        }
+
+        // FIX: Safe HTML escape to prevent XSS in dynamic onclick
+        function escHtml(str) {
+            return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // ══ MODAL: Transaction Detail ══════════════════════════════════
+        function openTranModal(tid) {
+            const t = db.TRANSACTIONS.find(x => x.TID === tid);
+            if (!t) return;
+
+            const isCr = (t.TYPE || '').trim().toLowerCase() === 'credit';
+
+            // Items for this transaction
+            const itemRows = (db['ITEM DETAILS'] || []).filter(i => i.TID === tid).map(i => {
+                return `<tr>
+                    <td style="font-weight:600;">${getItemName(i.IID)}</td>
+                    <td class="text-end">${formatCurr(i.RATE)}</td>
+                    <td class="text-center">${i.QUANTITY || '—'}</td>
+                    <td class="text-end" style="font-weight:700;">${formatCurr(i['ITEM TOTAL'])}</td>
+                </tr>`;
+            }).join('');
+
+            // Dues history
+            let cumPaid = 0;
+            const duesRows = (db.DUES || []).filter(d => d.TID === tid).map(d => {
+                cumPaid += safeNum(d['TOTAL DUES PAID']);
+                return `<tr>
+                    <td>${d['DUES Payment DATE'] || d['DATE of TRANSACTION'] || '—'}</td>
+                    <td class="text-end amt-cr">+${formatCurr(d['TOTAL DUES PAID'])}</td>
+                </tr>`;
+            }).join('');
+
+            const originalDues = safeNum(t.DUES);
+            const currentDues  = Math.max(0, originalDues - cumPaid);
+            const finalAmt     = safeNum(t.SUBTOTAL) - safeNum(t.DISCOUNT);
+
+            document.getElementById('modal-tran-content').innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;">Transaction Date</div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;">${t.DATE || '—'}</div>
+                    </div>
+                    <span class="badge-type ${isCr ? 'cr' : 'dr'}" style="font-size:0.85rem;padding:6px 16px;">${isCr ? 'CREDIT' : 'DEBIT'}</span>
+                </div>
+
+                <div class="section-chip"><i class="fas fa-boxes"></i>Purchased Items</div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:4px;">
+                    <table class="invoice-table">
+                        <thead><tr><th>Item</th><th class="text-end">Rate</th><th class="text-center">Qty</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>${itemRows || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:16px;">No items listed</td></tr>'}</tbody>
+                    </table>
+                </div>
+
+                <div class="section-chip" style="margin-top:14px;"><i class="fas fa-calculator"></i>Summary</div>
+                <div class="summary-box">
+                    <div class="summary-row"><span style="color:var(--text2);">Subtotal</span> <strong>${formatCurr(t.SUBTOTAL)}</strong></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Discount</span> <strong style="color:var(--success);">−${formatCurr(t.DISCOUNT)}</strong></div>
+                    <div class="summary-row total"><span>Final Amount</span> <strong style="color:var(--primary);font-size:1rem;">${formatCurr(finalAmt)}</strong></div>
+                </div>
+
+                <div class="section-chip"><i class="fas fa-money-bill-wave"></i>Payment & Dues Track</div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+                    <table class="invoice-table">
+                        <thead><tr><th>Date</th><th class="text-end">Amount Paid</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>At Transaction Time</td>
+                                <td class="text-end amt-cr">+${formatCurr(t.PAID)}</td>
+                            </tr>
+                            ${duesRows}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Current Balance Due</th>
+                                <th class="text-end ${currentDues > 0 ? 'amt-dr' : 'amt-cr'}" style="font-size:0.95rem;">${formatCurr(currentDues)}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            bootstrapTranModal.show();
+        }
+
+        // ══ MODAL: Dues Detail ════════════════════════════════════════
+        function openDuesDetailModal(tid) {
+            const t = db.TRANSACTIONS.find(x => x.TID === tid);
+            if (!t) return;
+
+            const duesRows = (db.DUES || []).filter(d => d.TID === tid);
+            let cumPaid = 0;
+
+            const rowsHtml = duesRows.length === 0
+                ? '<tr class="empty-row"><td colspan="3">No dues payment records</td></tr>'
+                : duesRows.map(d => {
+                    cumPaid += safeNum(d['TOTAL DUES PAID']);
+                    const bal = Math.max(0, safeNum(t.DUES) - cumPaid);
+                    return `<tr>
+                        <td>${d['DUES Payment DATE'] || '—'}</td>
+                        <td class="text-end amt-cr">+${formatCurr(d['TOTAL DUES PAID'])}</td>
+                        <td class="text-end amt-dr">${formatCurr(bal)}</td>
+                    </tr>`;
+                }).join('');
+
+            const currentDues = Math.max(0, safeNum(t.DUES) - cumPaid);
+
+            document.getElementById('modal-dues-content').innerHTML = `
+                <div class="summary-box">
+                    <div class="summary-row"><span style="color:var(--text2);">Original Dues</span> <strong>${formatCurr(t.DUES)}</strong></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Total Paid Later</span> <strong class="amt-cr">${formatCurr(cumPaid)}</strong></div>
+                    <div class="summary-row total"><span>Remaining Balance</span> <strong class="${currentDues > 0 ? 'amt-dr' : 'amt-cr'}" style="font-size:1rem;">${formatCurr(currentDues)}</strong></div>
+                </div>
+
+                <div class="section-chip"><i class="fas fa-history"></i>Payment Timeline</div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+                    <table class="invoice-table">
+                        <thead><tr><th>Pay Date</th><th class="text-end">Amount Paid</th><th class="text-end">Bal Left</th></tr></thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+            `;
+            bootstrapDuesDetailModal.show();
+        }
+
+        // ══ MODAL: Item Detail ════════════════════════════════════════
+        function openItemModal(idid) {
+            // Find item by IDID or composite key
+            const item = (db['ITEM DETAILS'] || []).find(i => (i.IDID || (i.IID + i.TID)) === idid);
+            if (!item) return;
+
+            const itemName = getItemName(item.IID);
+            const itemType = getItemType(item.IID);
+            const txn      = db.TRANSACTIONS.find(t => t.TID === item.TID) || {};
+            const isCr     = (txn.TYPE || '').trim().toLowerCase() === 'credit';
+
+            document.getElementById('modal-item-content').innerHTML = `
+                <div style="text-align:center;padding:12px 0 16px;">
+                    <div style="width:56px;height:56px;background:var(--primary-light);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+                        <i class="fas fa-box" style="color:var(--primary);font-size:1.4rem;"></i>
+                    </div>
+                    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;">${itemName}</div>
+                    ${itemType ? `<div style="font-size:0.8rem;color:var(--text3);margin-top:3px;">${itemType}</div>` : ''}
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-row"><span style="color:var(--text2);">Transaction ID</span> <strong>${item.TID || '—'}</strong></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Transaction Type</span> <span class="badge-type ${isCr ? 'cr' : 'dr'}">${isCr ? 'CREDIT' : 'DEBIT'}</span></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Date</span> <strong>${item.DATE || txn.DATE || '—'}</strong></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Rate</span> <strong>${formatCurr(item.RATE)}</strong></div>
+                    <div class="summary-row"><span style="color:var(--text2);">Quantity</span> <strong>${item.QUANTITY || '—'}</strong></div>
+                    <div class="summary-row total"><span>Item Total</span> <strong style="color:var(--primary);font-size:1.05rem;">${formatCurr(item['ITEM TOTAL'])}</strong></div>
+                </div>
+
+                <button onclick="openTranModal('${escHtml(item.TID)}');bootstrapItemModal.hide();" 
+                    style="width:100%;background:var(--primary-light);border:1.5px solid var(--primary);color:var(--primary);border-radius:var(--radius-sm);padding:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;margin-top:4px;">
+                    <i class="fas fa-receipt me-2"></i>View Full Transaction
+                </button>
+            `;
+            bootstrapItemModal.show();
+        }
+    </script>
+</body>
+</html>
